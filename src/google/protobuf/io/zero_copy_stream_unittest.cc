@@ -715,6 +715,39 @@ TEST_F(IoTest, StringIo) {
   }
 }
 
+TEST_F(IoTest, StringIo2) {
+  StringOutputStream2 output;
+  WriteString(&output, "Hello world!\n");
+  EXPECT_EQ(13, output.ByteCount());
+  EXPECT_EQ("Hello world!\n", output.GetBytes());
+
+  WriteString(&output, "Some te");
+  EXPECT_EQ(20, output.ByteCount());
+  EXPECT_EQ("Hello world!\nSome te", output.GetBytes());
+
+  WriteString(&output, "xt.  Blah blah.");
+  EXPECT_EQ(35, output.ByteCount());
+  EXPECT_EQ("Hello world!\nSome text.  Blah blah.", output.GetBytes());
+
+  WriteString(&output, "abcdefg");
+  EXPECT_EQ(42, output.ByteCount());
+  EXPECT_EQ("Hello world!\nSome text.  Blah blah.abcdefg",
+            output.GetBytes());
+
+  WriteString(&output, "01234567890123456789");
+  EXPECT_EQ(62, output.ByteCount());
+  EXPECT_EQ("Hello world!\nSome text.  Blah blah.abcdefg01234567890123456789",
+            output.GetBytes());
+
+  WriteString(&output, "foobar");
+  EXPECT_EQ(68, output.ByteCount());
+  EXPECT_EQ("Hello world!\nSome text.  Blah blah.abcdefg01234567890123456789"
+            "foobar", output.GetBytes());
+
+  output.BackUp(55);
+  EXPECT_EQ(13, output.ByteCount());
+  EXPECT_EQ("Hello world!\n", output.GetBytes());
+}
 
 // To test files, we create a temporary file, write, read, truncate, repeat.
 TEST_F(IoTest, FileIo) {

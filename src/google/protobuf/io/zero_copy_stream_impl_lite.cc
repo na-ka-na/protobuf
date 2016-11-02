@@ -205,6 +205,64 @@ void StringOutputStream::SetString(string* target) {
 
 // ===================================================================
 
+StringOutputStream2::StringOutputStream2()
+  : byte_count_(0) {
+}
+
+StringOutputStream2::~StringOutputStream2() {
+}
+
+bool StringOutputStream2::Next(void** data, int* size) {
+  int old_size = target_.size();
+
+  // Grow the string.
+  if (old_size < target_.capacity()) {
+    // Resize the string to match its capacity, since we can get away
+    // without a memory allocation this way.
+    STLStringResizeUninitialized(&target_, target_.capacity());
+  } else if (byte_count_ == old_size) {
+    // Size has reached capacity, try to double the size.
+    if (old_size > std::numeric_limits<int>::max() / 2) {
+      // Can not double the size otherwise it is going to cause integer
+      // overflow in the expression below: old_size * 2 ";
+      GOOGLE_LOG(ERROR) << "Cannot allocate buffer larger than kint32max for "
+                        << "StringOutputStream2.";
+      return false;
+    }
+    // Double the size, also make sure that the new size is at least
+    // kMinimumSize.
+    STLStringResizeUninitialized(
+        &target_,
+        std::max(old_size * 2,
+                 kMinimumSize + 0));  // "+ 0" works around GCC4 weirdness.
+  }
+
+  int new_size = target_.size();
+  *data = mutable_string_data(&target_) + byte_count_;
+  *size = new_size - byte_count_;
+  byte_count_ = new_size;
+  return true;
+}
+
+void StringOutputStream2::BackUp(int count) {
+  GOOGLE_CHECK_GE(count, 0);
+  GOOGLE_CHECK_LE(count, byte_count_);
+  byte_count_ -= count;
+}
+
+int64 StringOutputStream2::ByteCount() const {
+  return byte_count_;
+}
+
+const string& StringOutputStream2::GetBytes() {
+  if (target_.size() != byte_count_) {
+    target_.resize(byte_count_);
+  }
+  return target_;
+}
+
+// ===================================================================
+
 LazyStringOutputStream::LazyStringOutputStream(
     ResultCallback<string*>* callback)
     : StringOutputStream(NULL),

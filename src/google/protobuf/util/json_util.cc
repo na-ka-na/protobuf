@@ -97,9 +97,13 @@ util::Status BinaryToJsonString(TypeResolver* resolver,
                                   string* json_output,
                                   const JsonPrintOptions& options) {
   io::ArrayInputStream input_stream(binary_input.data(), binary_input.size());
-  io::StringOutputStream output_stream(json_output);
-  return BinaryToJsonStream(resolver, type_url, &input_stream, &output_stream,
-                            options);
+  io::StringOutputStream2 output_stream;
+  util::Status status = BinaryToJsonStream(resolver, type_url, &input_stream,
+                                           &output_stream, options);
+  if (status.ok()) {
+    output_stream.moveBytes(*json_output);
+  }
+  return status;
 }
 
 namespace {
@@ -172,9 +176,13 @@ util::Status JsonToBinaryString(TypeResolver* resolver,
                                   string* binary_output,
                                   const JsonParseOptions& options) {
   io::ArrayInputStream input_stream(json_input.data(), json_input.size());
-  io::StringOutputStream output_stream(binary_output);
-  return JsonToBinaryStream(
+  io::StringOutputStream2 output_stream;
+  util::Status status = JsonToBinaryStream(
       resolver, type_url, &input_stream, &output_stream, options);
+  if (status.ok()) {
+    output_stream.moveBytes(*binary_output);
+  }
+  return status;
 }
 
 namespace {

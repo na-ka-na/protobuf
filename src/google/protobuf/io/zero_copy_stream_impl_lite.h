@@ -159,6 +159,46 @@ class LIBPROTOBUF_EXPORT StringOutputStream : public ZeroCopyOutputStream {
   GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(StringOutputStream);
 };
 
+// ===================================================================
+
+// A ZeroCopyOutputStream which appends bytes to a string.
+// It has much a more favorable performance profile than StringOutputStream
+// outside of Google since STLStringResizeUninitialized() is un-optimized.
+class LIBPROTOBUF_EXPORT StringOutputStream2 : public ZeroCopyOutputStream {
+ public:
+  explicit StringOutputStream2();
+  ~StringOutputStream2();
+
+  // implements ZeroCopyOutputStream ---------------------------------
+  bool Next(void** data, int* size);
+  void BackUp(int count);
+  int64 ByteCount() const;
+
+  // Returns the bytes written to this stream till now.
+  const string& GetBytes();
+
+  // Moves bytes written to this stream to the given target.
+  // It is illegal to use the stream after a call to this function.
+  void moveBytes(string& target) {
+#ifdef LANG_CXX11
+    target = std::move(GetBytes());
+#else
+    target = GetBytes();
+#endif
+    byte_count_ = 0;
+  }
+
+ private:
+  static const int kMinimumSize = 16;
+
+  string target_;    // bytes are appended to this
+  int64 byte_count_; // number of bytes writtten till now
+
+  GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(StringOutputStream2);
+};
+
+// ===================================================================
+
 // LazyStringOutputStream is a StringOutputStream with lazy acquisition of
 // the output string from a callback. The string is owned externally, and not
 // deleted in the stream destructor.
