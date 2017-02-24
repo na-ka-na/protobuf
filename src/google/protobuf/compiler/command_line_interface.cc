@@ -416,7 +416,7 @@ class CommandLineInterface::MemoryOutputStream
   bool append_mode_;
 
   // StringOutputStream writing to data_.
-  google::protobuf::scoped_ptr<io::StringOutputStream> inner_;
+  google::protobuf::scoped_ptr<io::StringOutputStream2> inner_;
 };
 
 // -------------------------------------------------------------------
@@ -589,7 +589,7 @@ CommandLineInterface::MemoryOutputStream::MemoryOutputStream(
     : directory_(directory),
       filename_(filename),
       append_mode_(append_mode),
-      inner_(new io::StringOutputStream(&data_)) {
+      inner_(new io::StringOutputStream2(&data_)) {
 }
 
 CommandLineInterface::MemoryOutputStream::MemoryOutputStream(
@@ -598,7 +598,7 @@ CommandLineInterface::MemoryOutputStream::MemoryOutputStream(
     : directory_(directory),
       filename_(filename),
       insertion_point_(insertion_point),
-      inner_(new io::StringOutputStream(&data_)) {
+      inner_(new io::StringOutputStream2(&data_)) {
 }
 
 CommandLineInterface::MemoryOutputStream::~MemoryOutputStream() {

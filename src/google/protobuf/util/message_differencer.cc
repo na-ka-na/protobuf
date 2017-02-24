@@ -397,7 +397,7 @@ bool MessageDifferencer::Compare(const Message& message1,
 
   // Setup the internal reporter if need be.
   if (output_string_) {
-    io::StringOutputStream output_stream(output_string_);
+    io::StringOutputStream2 output_stream(output_string_);
     StreamReporter reporter(&output_stream);
     reporter_ = &reporter;
     result = Compare(message1, message2, &parent_fields);
@@ -435,7 +435,7 @@ bool MessageDifferencer::CompareWithFields(
 
   // Setup the internal reporter if need be.
   if (output_string_) {
-    io::StringOutputStream output_stream(output_string_);
+    io::StringOutputStream2 output_stream(output_string_);
     StreamReporter reporter(&output_stream);
     reporter_ = &reporter;
     result = CompareRequestedFieldsUsingSettings(

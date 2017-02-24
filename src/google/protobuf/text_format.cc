@@ -1517,7 +1517,7 @@ bool TextFormat::Printer::PrintToString(const Message& message,
   GOOGLE_DCHECK(output) << "output specified is NULL";
 
   output->clear();
-  io::StringOutputStream output_stream(output);
+  io::StringOutputStream2 output_stream(output);
 
   return Print(message, &output_stream);
 }
@@ -1528,7 +1528,7 @@ bool TextFormat::Printer::PrintUnknownFieldsToString(
   GOOGLE_DCHECK(output) << "output specified is NULL";
 
   output->clear();
-  io::StringOutputStream output_stream(output);
+  io::StringOutputStream2 output_stream(output);
   return PrintUnknownFields(unknown_fields, &output_stream);
 }
 
@@ -1640,7 +1640,7 @@ void TextFormat::Printer::PrintFieldValueToString(
   GOOGLE_DCHECK(output) << "output specified is NULL";
 
   output->clear();
-  io::StringOutputStream output_stream(output);
+  io::StringOutputStream2 output_stream(output);
   TextGenerator generator(&output_stream, initial_indent_level_);
 
   PrintFieldValue(message, message.GetReflection(), field, index, generator);

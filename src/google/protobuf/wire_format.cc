@@ -759,7 +759,7 @@ bool WireFormat::ParseAndMergeMessageSetItem(
           uint32 length;
           if (!input->ReadVarint32(&length)) return false;
           if (!input->ReadString(&temp, length)) return false;
-          io::StringOutputStream output_stream(&message_data);
+          io::StringOutputStream2 output_stream(&message_data);
           io::CodedOutputStream coded_output(&output_stream);
           coded_output.WriteVarint32(length);
           coded_output.WriteString(temp);

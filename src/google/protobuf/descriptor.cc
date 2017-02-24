@@ -6026,7 +6026,7 @@ bool DescriptorBuilder::OptionInterpreter::InterpretSingleOption(
         new UnknownFieldSet());
     switch ((*iter)->type()) {
       case FieldDescriptor::TYPE_MESSAGE: {
-        io::StringOutputStream outstr(
+        io::StringOutputStream2 outstr(
             parent_unknown_fields->AddLengthDelimited((*iter)->number()));
         io::CodedOutputStream out(&outstr);
         internal::WireFormat::SerializeUnknownFields(*unknown_fields, &out);
