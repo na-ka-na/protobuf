@@ -165,7 +165,7 @@ bool StringOutputStream::Next(void** data, int* size) {
     // Resize the string to match its capacity, since we can get away
     // without a memory allocation this way.
     STLStringResizeUninitialized(target_, target_->capacity());
-  } else {
+  } else if (ShouldIncreaseBuffer(old_size)) {
     // Size has reached capacity, try to double the size.
     if (old_size > std::numeric_limits<int>::max() / 2) {
       // Can not double the size otherwise it is going to cause integer
@@ -182,9 +182,18 @@ bool StringOutputStream::Next(void** data, int* size) {
                  kMinimumSize + 0));  // "+ 0" works around GCC4 weirdness.
   }
 
+  PositionAfterBufferResize(data, size, old_size);
+  return true;
+}
+
+bool StringOutputStream::ShouldIncreaseBuffer(int /*old_size*/) {
+  return true;
+}
+
+void StringOutputStream::PositionAfterBufferResize(
+    void** data, int* size, int old_size) {
   *data = mutable_string_data(target_) + old_size;
   *size = target_->size() - old_size;
-  return true;
 }
 
 void StringOutputStream::BackUp(int count) {
@@ -201,6 +210,47 @@ int64 StringOutputStream::ByteCount() const {
 
 void StringOutputStream::SetString(string* target) {
   target_ = target;
+}
+
+// ===================================================================
+
+StringOutputStream2::StringOutputStream2(string* target)
+  : StringOutputStream(target),
+    byte_count_((target_ != NULL) ? target_->size() : 0) {
+}
+
+StringOutputStream2::~StringOutputStream2() {
+  if (target_ != NULL) {
+    target_->resize(byte_count_);
+  }
+}
+
+bool StringOutputStream2::ShouldIncreaseBuffer(int old_size) {
+  return byte_count_ == old_size;
+}
+
+void StringOutputStream2::PositionAfterBufferResize(
+    void** data, int* size, int /*old_size*/) {
+  *data = mutable_string_data(target_) + byte_count_;
+  *size = target_->size() - byte_count_;
+  byte_count_ = target_->size();
+}
+
+void StringOutputStream2::BackUp(int count) {
+  GOOGLE_CHECK_GE(count, 0);
+  GOOGLE_CHECK(target_ != NULL);
+  GOOGLE_CHECK_LE(count, byte_count_);
+  byte_count_ -= count;
+}
+
+int64 StringOutputStream2::ByteCount() const {
+  GOOGLE_CHECK(target_ != NULL);
+  return byte_count_;
+}
+
+void StringOutputStream2::SetString(string* target) {
+  StringOutputStream::SetString(target);
+  byte_count_ = (target_ != NULL) ? target_->size() : 0;
 }
 
 // ===================================================================

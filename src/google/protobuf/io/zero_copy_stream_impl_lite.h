@@ -129,6 +129,9 @@ class LIBPROTOBUF_EXPORT ArrayOutputStream : public ZeroCopyOutputStream {
 // ===================================================================
 
 // A ZeroCopyOutputStream which appends bytes to a string.
+// @Deprecated: Prefer to use StringOutputStream2 below since it has
+// much better performance characteristics outside Google.
+// TODO(xiaofeng): remove all references to this class
 class LIBPROTOBUF_EXPORT StringOutputStream : public ZeroCopyOutputStream {
  public:
   // Create a StringOutputStream which appends bytes to the given string.
@@ -141,22 +144,51 @@ class LIBPROTOBUF_EXPORT StringOutputStream : public ZeroCopyOutputStream {
   //   the first call to Next() will return at least n bytes of buffer
   //   space.
   explicit StringOutputStream(string* target);
-  ~StringOutputStream();
+  virtual ~StringOutputStream();
 
   // implements ZeroCopyOutputStream ---------------------------------
   bool Next(void** data, int* size);
-  void BackUp(int count);
-  int64 ByteCount() const;
+  virtual void BackUp(int count);
+  virtual int64 ByteCount() const;
 
  protected:
-  void SetString(string* target);
+  virtual void SetString(string* target);
+  virtual bool ShouldIncreaseBuffer(int old_size);
+  virtual void PositionAfterBufferResize(void** data, int* size, int old_size);
 
- private:
   static const int kMinimumSize = 16;
 
   string* target_;
 
   GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(StringOutputStream);
+};
+
+// A ZeroCopyOutputStream which appends bytes to a string.
+class LIBPROTOBUF_EXPORT StringOutputStream2 : public StringOutputStream {
+ public:
+  // Create a StringOutputStream which appends bytes to the given string.
+  // The string remains property of the caller, but it is mutated in arbitrary
+  // ways and MUST NOT be accessed in any way until the stream is destructed.
+  //
+  // Hint:  If you call target->reserve(n) before creating the stream,
+  //   the first call to Next() will return at least n bytes of buffer
+  //   space.
+  explicit StringOutputStream2(string* target);
+  ~StringOutputStream2();
+
+  // implements ZeroCopyOutputStream ---------------------------------
+  void BackUp(int count);
+  int64 ByteCount() const;
+
+ protected:
+  void SetString(string* target);
+  bool ShouldIncreaseBuffer(int old_size);
+  void PositionAfterBufferResize(void** data, int* size, int old_size);
+
+ private:
+  int64 byte_count_; // number of bytes written till now
+
+  GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(StringOutputStream2);
 };
 
 // LazyStringOutputStream is a StringOutputStream with lazy acquisition of
